@@ -932,7 +932,7 @@ const formatearHora = (hora) => {
       <div class="sidebar-section">
         <label>Estado de Reserva</label>
         <select v-model="estadoReserva" class="search-input">
-          <option value="activas">Reservas activas</option>
+          <option value="activas">Activas</option>
         </select>
       </div>
 
@@ -2705,135 +2705,480 @@ ion-icon {
    ========================================================================== */
 
 @media (max-width: 1254px) {
-  html, body {
-    overflow-y: auto !important;
-    overflow-x: hidden !important;
-    height: auto !important;
-  }
-
-  .dashboard-wrapper {
-    display: flex !important;
-    flex-direction: column !important;
-    height: auto !important;
-    min-height: 100vh !important;
-    overflow-y: visible !important; 
-    overflow-x: hidden !important; 
-    width: 100% !important;
-    max-width: 100% !important;
-    padding: 10px !important;
-    box-sizing: border-box !important;
-  }
-
-  /* El sidebar se mantiene intacto */
-  .sidebar {
-    display: block !important;
-    width: 100% !important;
-    max-width: 100% !important;
-    height: auto !important;
-    margin-bottom: 20px !important;
-    box-sizing: border-box !important;
-  }
-
   /* =======================================================
-     BLOQUE 2 CORREGIDO: Reducción y empaquetado del Header
+     1. EL ANCHO DEL SIDEBAR (Mantén los 3 valores iguales)
      ======================================================= */
-  .calendar-header {
+
+ .dashboard-wrapper .sidebar {
+  width: 110px !important;
+  min-width: 110px !important;
+  max-width: 110px !important;
+  
+  /* Mueve el sidebar completamente hacia el borde izquierdo pegadito */
+  margin-left: -5px !important;     /* Ajusta este número (ej. -10px o -12px) si necesitas pegarlo aún más */
+  margin-right: auto !important;    /* Empuja todo el resto de la interfaz hacia la derecha */
+  align-self: flex-start !important;
+  margin-top: -5px;
+}
+
+
+ .sidebar {
     display: flex !important;
     flex-direction: column !important;
     align-items: center !important;
-    gap: 10px !important;
-    width: 100% !important;
-    max-width: 100% !important;
-    height: auto !important;
-    margin-bottom: 20px !important;
-    background: #ffffff !important;
-    border: 2px solid #0d9488 !important;
-    border-radius: 24px !important;
-    padding: 12px !important; /* Padding reducido para evitar desbordes */
+    
+    /* Forzamos el tamaño exacto e idéntico en las tres propiedades */
+    width:90px !important;     
+    min-width: 20px !important; 
+    max-width: 110px !important; 
+  height: 100% !important;
+    padding: 10px 5px !important;
     box-sizing: border-box !important;
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
+    gap: 12px !important;
   }
-
-  .calendar-header h2 {
-    font-size: 1.1rem !important; /* Letra un poco más chica para que no salte */
+  /* =======================================================
+     2. TAMAÑO DE LA LETRA DEL LOGO (J&M / Texto del Logo)
+     ======================================================= */
+  .sidebar .logo-box,
+  .sidebar [class*="logo"] {
+    font-size: 14px !important; /* <--- CAMBIA ESTE NÚMERO para la letra del logo */
+    font-weight: bold !important;
     text-align: center !important;
-    margin: 4px 0 !important;
-    width: 100% !important;
   }
 
-  /* Reduce y reordena los botones internos para que no fuercen un ancho gigante */
-  .calendar-header button,
-  .calendar-header > div,
-  .navigation-buttons {
+  /* Si tu logo tiene una imagen, controlas su tamaño aquí */
+  .sidebar img.logo {
     width: 100% !important;
-    max-width: 100% !important;
-    display: flex !important;
-    justify-content: center !important;
-    flex-wrap: wrap !important; /* Si no caben, bajan de forma limpia */
-    gap: 6px !important;
-    box-sizing: border-box !important;
+    max-width: 60px !important; /* <--- Tamaño de la imagen del logo */
+    height: auto !important;
   }
 
   /* =======================================================
-     BLOQUE 3 CORREGIDO: LIBERACIÓN TOTAL DE LAS 24 HORAS
+     3. TAMAÑO DE LOS BOTONES Y SELECTORES DENTRO DEL SIDEBAR
      ======================================================= */
-  .calendar-container {
-    display: flex !important;
-    flex-direction: column !important;
+  .sidebar button,
+  .sidebar select,
+  .sidebar input,
+  .sidebar .btn-back,
+  .sidebar [class*="btn"] {
+    font-size: 12px !important; /* <--- CAMBIA ESTE NÚMERO para la letra de los botones */
+    padding: 6px 8px !important; /* <--- Margen interno de los botones (alto y ancho) */
     width: 100% !important;
     max-width: 100% !important;
-    height: auto !important; /* Quita el porcentaje fijo */
     box-sizing: border-box !important;
   }
 
-  /* Forzamos a todos los contenedores de la agenda a estirarse sin límite de altura */
-  .scroll-container {
-    display: flex !important;
-    flex-direction: column !important;
-    width: 100% !important;
-    max-width: 100% !important;
-    height: auto !important;       /* ¡CRUCIAL! Rompe el muro del 85% de la laptop */
-    max-height: none !important;   /* Elimina cualquier restricción previa */
-    overflow: visible !important;  /* Libera el scroll para que puedas bajar por completo */
-    position: relative !important;
-    box-sizing: border-box !important;
+  /* Enlaces o textos pequeños debajo de los botones (como "Editar", "+ Nueva") */
+  .sidebar a,
+  .sidebar .btn-link,
+  .sidebar span {
+    font-size: 11px !important; /* <--- Letra de los enlaces pequeños */
+    text-align: center !important;
   }
 
-  /* La grilla y las columnas internas se expanden de forma natural hacia abajo */
-  .calendar-grid,
-  .time-slots-grid,
-  .time-grid,
-  .days-col,
-  .day-column {
+ .sidebar .btn-back {
+    width: 30px !important;
+    min-width: 30px !important;
+    height: 30px !important;
+    margin-right: 80px !important;   /* Empuja todo el contenido a la derecha */
+    margin-left: 25px !important;    /* Margen negativo para pegarlo al borde izquierdo exacto */
+    align-self: flex-start !important; /* Alineación rígida al inicio del contenedor flex */
+    display: flex !important;
+    justify-content: center !important;
+    align-items: center !important;
+    padding: 0 !important;
+  }
+
+  .sidebar .sucursal-actions {
+    width: 100% !important;
+    padding: 0 px !important;    /* Deja 10px de espacio libre a la izquierda y derecha del borde */
+    box-sizing: border-box !important; /* Evita que el padding estire la sección hacia afuera */
     display: flex !important;
     flex-direction: column !important;
-    width: 100% !important;
-    max-width: 100% !important;
-    height: auto !important; 
-    max-height: none !important;
-    overflow: visible !important; /* Asegura que ninguna subcapa corte las horas */
-    position: relative !important;
+    gap: 3px !important;           /* Separa los elementos internos como los títulos de sus inputs */
+  }
+
+  .dashboard-wrapper .sidebar .input-with-actions select.search-input {
+  padding-left: 2px !important;
+  padding-right: 12px !important; /* Espacio mínimo indispensable para la flecha del select */
+  font-size: 11px !important;
+  text-overflow: clip !important;   /* Desactiva los tres puntos (...) para priorizar ver las letras */
+}
+
+.dashboard-wrapper .sidebar .sidebar-section select.search-input {
+ 
+  padding-left: 5px !important;
+  padding-right: 12px !important; 
+  font-size: 11px !important;
+  text-overflow: clip !important;
+  white-space: nowrap !important;
+}
+
+ .dashboard-wrapper .sidebar .avatar-list {
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;     /* Centra los bloques de tarjetas en el sidebar */
+  justify-content: center !important;
+  gap: 5px !important;
+  width: 100% !important;
+}
+
+.dashboard-wrapper .sidebar .avatar-item {
+  display: grid !important;
+  grid-template-columns: 24px 1fr !important; /* Columna 1 fija para el icono (24px) y Columna 2 para el texto */
+  align-items: center !important;             /* Centra verticalmente el pie y el texto */
+  justify-content: center !important;
+  width: 100% !important;
+  padding: 6px 4px !important;
+  box-sizing: border-box !important;
+  gap: 4px !important;                        /* Separación constante entre el icono y el nombre */
+}
+
+.dashboard-wrapper .sidebar .avatar-icon {
+  width: 20px !important;                     /* Define un ancho fijo para el icono */
+  height: 20px !important;                    /* Define un alto fijo para el icono */
+  flex-shrink: 0 !important;
+  justify-self: center !important;            /* Mantiene el icono perfectamente centrado en su columna */
+  margin: 0 !important;                       /* Limpia márgenes para que no se desfase */
+}
+
+.dashboard-wrapper .sidebar .avatar-item span {
+  font-size: 11px !important;
+  text-align: left !important;                /* Alineado a la izquierda para un orden visual perfecto */
+  white-space: nowrap !important;
+  overflow: hidden !important;
+  text-overflow: clip !important;
+}
+
+ 
+
+  /* CORRECCIÓN: Ajuste ultra compacto para el formulario dentro del sidebar */
+.sucursal-form-inline {
+  width: 100% !important;
+  max-width: 100% !important;
+  padding: 4px !important;            /* Reduce el espacio interno al mínimo */
+  margin: 5px 0 !important;
+  box-sizing: border-box !important;
+}
+
+/* Reduce los textos de los títulos del formulario */
+.sucursal-form-inline h3 {
+  font-size: 9px !important;
+  font-weight: 800 !important;
+  letter-spacing: 0.5px !important;
+  margin-bottom: 6px !important;
+}
+
+.sucursal-form-inline .input-group {
+  margin-bottom: 5px !important;
+  width: 100% !important;
+}
+
+/* Reduce las etiquetas (Label) */
+.sucursal-form-inline .input-group label {
+  font-size: 7.5px !important;       /* Letra más pequeña para que entre completa */
+  font-weight: bold !important;
+  white-space: normal !important;     /* Permite que el texto baje a la siguiente línea si no cabe */
+  word-break: break-word !important;  /* Rompe palabras largas de forma segura */
+  line-height: 1.1 !important;        /* Espaciado interlineal compacto */
+  color: #008b8b !important;          /* Mantiene tu color corporativo verde oscuro */
+}
+
+/* Encoge las cajas de texto (Input) para que no se desborden del ancho */
+.sucursal-form-inline input.search-input {
+  font-size: 8px !important;            /* Letra más pequeña para el texto que escribas */
+  padding: 3px 2px !important;          /* Reduce al mínimo el margen interno lateral */
+  height: 24px !important;
+  text-align: center !important;        /* Centra el texto para que se lea mejor */
+  box-sizing: border-box !important;
+}
+
+/* Alinea los botones de Guardar y Cancelar uno abajo del otro para ahorrar ancho */
+.sucursal-form-inline .form-actions {
+  display: flex !important;
+  flex-direction: column !important;  /* Apilados verticalmente para que no se corten */
+  gap: 3px !important;
+  width: 100% !important;
+  margin-top: 5px !important;
+}
+
+/* Achica los botones de acción del formulario */
+.sucursal-form-inline .form-actions button {
+  font-size: 9px !important;
+  padding: 3px 0 !important;
+  height: 22px !important;
+  width: 100% !important;
+  text-align: center !important;
+}
+.sucursal-form-inline input.search-input::placeholder {
+  font-size: 7.5px !important;          /* Tamaño ideal para que "Ej. Sucursal Miraflores" no se corte */
+  color: #94a3b8 !important;            /* Gris claro legible */
+  text-align: center !important;
+}
+
+
+
+/* ==========================================================================
+   SOLUCIÓN PARA PANTALLAS CHICAS (max-width: 768px)
+   ========================================================================== */
+@media (max-width: 768px) {
+  .calendar-header {
+    display: flex !important;
+    flex-direction: column !important;
     gap: 12px !important;
+    padding: 12px !important;
+    background: white !important;
+    border: 1.5px solid #0d9488 !important;
+    border-radius: 14px !important;
+    width: 100% !important;
     box-sizing: border-box !important;
   }
 
-  /* Las tarjetas de horas y citas se apilan consecutivamente hasta el final */
-  .time-slot,
-  .appointment-item,
-  .day-column > div,
-  div[style*="position: absolute"],
-  div[style*="position:absolute"] {
-    position: relative !important; 
-    top: auto !important;          
-    left: auto !important;
+  /* Modificamos esta sección para que los elementos se apilen verticalmente */
+  .nav-controls {
+    display: flex !important;
+    flex-direction: column !important; /* El botón "Hoy" arriba y la fecha abajo */
+    align-items: center !important;
+    gap: 8px !important;
     width: 100% !important;
-    max-width: 100% !important;
-    height: auto !important;
-    min-height: 60px !important;   
-    margin-bottom: 8px !important;
-    transform: none !important;
+  }
+
+  .nav-controls .btn-nav {
+    width: 100% !important; /* El botón ocupa el ancho para que sea fácil de presionar */
+    max-width: 120px !important;
+    height: 25px !important;
+    font-size: 13px !important;
+  }
+
+  /* Contenedor de la fecha expandido al 100% para que no se corte nada */
+  /* CORREGIDO: Ajustes para que encaje perfectamente en Samsung e iPhone sin desbordar */
+  .date-nav-group {
+    display: flex !important;
+    flex-direction: row !important;
+    align-items: center !important;
+    justify-content: space-between !important; 
+    gap: 4px !important; /* Reduce el espacio interno para que quepa la flecha */
+    min-width: 0 !important; /* Elimina la restricción que sacaba la flecha de la pantalla */
+    border: 2px solid #0d9488 !important;
+    border-radius: 20px !important;
+    padding: 5px 8px !important; 
+    width: 100% !important;
     box-sizing: border-box !important;
-    display: block !important;     
+  }
+
+  /* La fecha ahora tiene espacio completo */
+  .calendar-header h2.fecha-display {
+    font-size: 15px !important; 
+    font-weight: 700 !important;
+    white-space: nowrap !important; 
+    overflow: visible !important;   
+    margin: 0 !important;
+    text-align: left !important; /* Cambiado a la izquierda */
+  }
+
+  /* Fila de Sucursal */
+  .sucursal-badge {
+    font-size: 14px !important;
+    font-family: "Cooper Black", serif !important;
+    color: #0d9488 !important;
+    text-align: center !important;
+    text-transform: uppercase !important;
+    width: 100% !important;
+    margin: -8px 0 !important;
+  }
+
+  /* Fila de los 3 botones inferiores simétricos */
+  .actions-group {
+    display: flex !important;
+    width: 100% !important;
+    justify-content: space-between !important;
+    gap: 6px !important;
+  }
+
+  .actions-group .btn-secondary,
+  .actions-group select {
+    flex: 1 !important;
+    min-width: 0 !important;
+    height: 32px !important;
+    font-size: 10px !important;
+    padding: 2px 4px !important;
+    text-align: center !important;
+    border-radius: 20px !important;
+    white-space: nowrap !important;
+    display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
   }
 }
+
+
+/* ==========================================================================
+   CELULARES
+   ========================================================================== */
+@media (max-width: 430px) {
+  /* Contenedor principal relativo para posicionar las esquinas */
+  .date-nav-group {
+    display: block !important; /* Cambiado a block para control absoluto interno */
+    position: relative !important;
+    padding: 8px 16px !important; /* Espacio libre exacto a los lados para las flechas */
+    height: 34px !important;
+    box-sizing: border-box !important;
+    width: 100% !important;
+  }
+
+  /* JALA EL BOTÓN IZQUIERDO TOTALMENTE A LA IZQUIERDA */
+  .date-nav-group button:first-of-type,
+  .date-nav-group .btn-icon:first-of-type {
+    position: absolute !important;
+    left: 6px !important;
+    top: 50% !important;
+    transform: translateY(-50%) !important;
+    width: 24px !important;
+    height: 24px !important;
+    display: inline-flex !important;
+    justify-content: center !important;
+    align-items: center !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    background: transparent !important;
+  }
+
+  /* JALA EL BOTÓN DERECHO TOTALMENTE A LA DERECHA */
+  .date-nav-group button:last-of-type,
+  .date-nav-group .btn-icon:last-of-type {
+    position: absolute !important;
+    right: 6px !important;
+    top: 50% !important;
+    transform: translateY(-50%) !important;
+    width: 24px !important;
+    height: 24px !important;
+    display: inline-flex !important;
+    justify-content: center !important;
+    align-items: center !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    background: transparent !important;
+  }
+
+  /* CENTRA EL TEXTO PERFECTAMENTE EN EL ESPACIO RESTANTE */
+  /* CORREGIDO: Fuerza a la letra a quedarse exactamente en el centro matemático de la caja */
+  .calendar-header h2.fecha-display {
+    font-size: 11px !important; 
+    font-weight: 700 !important;
+    text-align: center !important; 
+    display: block !important;
+    width: 100% !important;
+    margin: 0 !important; /* Limpia cualquier empuje lateral */
+    padding: 0 !important;
+    white-space: nowrap !important;
+    overflow: visible !important;
+    box-sizing: border-box !important;
+  }
+
+  /* Mantiene los botones inferiores compactos */
+  .actions-group .btn-secondary,
+  .actions-group select {
+    font-size: 8px !important;
+    padding: 2px 1px !important;
+  }
+}
+  
+  /* =======================================================
+     MANTENEMOS EL RESTO DEL CALENDARIO EXACTAMENTE IGUAL
+     ======================================================= */
+  .dashboard-wrapper {
+    display: flex !important;
+    flex-direction: row !important;
+    height: 100vh !important;
+    width: 100% !important;
+    max-width: 100vw !important;
+    padding: 8px !important;
+    gap: 8px !important;
+    box-sizing: border-box !important;
+    overflow: hidden !important;
+  }
+
+  .main-content,
+  .calendar-container,
+  .calendar-wrapper {
+    display: flex !important;
+    flex-direction: column !important;
+    flex: 1 !important;
+    width: auto !important;
+    height: 100% !important;
+    overflow: hidden !important;
+    box-sizing: border-box !important;
+  }
+
+  
+
+  .calendar-header h2 {
+    font-size: 1rem !important;
+    text-align: center !important;
+    margin: 0 !important;
+  }
+
+  .calendar-header button,
+  .navigation-buttons {
+    width: 100% !important;
+    display: flex !important;
+    justify-content: center !important;
+    gap: 4px !important;
+  }
+
+  .scroll-container {
+    display: block !important;
+    width: 100% !important;
+    flex: 1 !important;
+    height: 100% !important;
+    overflow-y: auto !important;
+    overflow-x: auto !important;
+    position: relative !important;
+    box-sizing: border-box !important;
+    background: #ffffff !important;
+    border: 2px solid #0d9488 !important;
+    border-radius: 16px !important;
+    padding: 4px !important;
+    -webkit-overflow-scrolling: touch !important;
+  }
+
+  .calendar-grid {
+    display: grid !important;
+    grid-template-columns: 60px 1fr !important;
+    position: relative !important;
+    width: 1200px !important; 
+    height: 1440px !important;
+    overflow: visible !important;
+  }
+
+  .days-col {
+    display: grid !important;
+    grid-template-columns: repeat(7, 1fr) !important;
+    position: relative !important;
+    height: 100% !important;
+    width: 100% !important;
+    overflow: visible !important;
+  }
+
+  .day-column {
+    position: relative !important;
+    height: 100% !important;
+    width: 100% !important;
+    display: block !important;
+    overflow: visible !important;
+  }
+
+  .time-slot,
+  .appointment-item,
+  .day-column > div {
+    position: absolute !important;
+    box-sizing: border-box !important;
+    transform: none !important;
+  }
+}
+
+
 
 </style>

@@ -1,5 +1,5 @@
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, computed, watch } from 'vue'
 import { supabase } from '../supabase.js'
 
 const props = defineProps({
@@ -9,53 +9,67 @@ const props = defineProps({
 const emit = defineEmits(['cerrarSesion', 'irACalendario'])
 const mostrarMenu = ref(false)
 
-// --- ESTADOS PARA MIS PACIENTES (COLUMNA DERECHA) ---
+// --- ESTADOS PARA MIS PACIENTES ---
 const mostrarPacientes = ref(false)
 const listaPacientes = ref([])
-
-// --- ESTADO PARA PRÓXIMAS CITAS (COLUMNA IZQUIERDA) ---
 const proximasCitas = ref([])
 
-// Carga las citas de hoy obteniendo la fecha local exacta sin desfases de zona horaria
+// --- ESTADOS PARA SUCURSALES Y GRÁFICOS ---
+const listaSucursales = ref([])
+const sucursalGraficoMensual = ref(null) 
+const citasSemana = ref([])              
+const datosMensuales = ref(new Array(12).fill(0)) 
+const totalCitasAño = ref(0) // Guarda la sumatoria total del año para calcular el 100%
+
+// Paginación del gráfico mensual (bloques de 5 meses)
+const mesInicioVista = ref(0)
+const mesesVisiblesCount = 5
+
+const nombresMeses = [
+  'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
+  'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'
+]
+
+const coloresPastelesMeses = [
+  '#ffb7b2', '#ffdac1', '#e2f0cb', '#b5ead7', '#c7ceea', '#ffc6ff',
+  '#ffd6a5', '#caf0f8', '#e1beed', '#fbc4ab', '#d8e2dc', '#ece4db'
+]
+
+const nombreSucursalSeleccionada = computed(() => {
+  if (!sucursalGraficoMensual.value) return 'Todas las Sucursales'
+  const sucursalEncontrada = listaSucursales.value.find(s => s.id === sucursalGraficoMensual.value)
+  return sucursalEncontrada ? sucursalEncontrada.nombre : 'Todas las Sucursales'
+})
+
 const cargarProximasCitas = async () => {
   try {
-    // 1. Obtenemos la fecha local actual formateada estrictamente como YYYY-MM-DD
     const fechaLocal = new Date()
-    const año = fechaLocal.getFullYear()
-    const mes = String(fechaLocal.getMonth() + 1).padStart(2, '0')
-    const dia = String(fechaLocal.getDate()).padStart(2, '0')
-    const hoy = `${año}-${mes}-${dia}` 
-
-    // 2. Consultamos directamente la tabla 'citas' en Supabase
-    const { data, error } = await supabase
-      .from('citas') 
-      .select('id, nombre_paciente, servicio, estado, fecha, sucursal') // Traemos los campos necesarios
-      .eq('fecha', hoy)                                               // Filtramos solo las de hoy
-      .in('estado', ['activa', 'pendiente'])                          // Que estén activas o pendientes
-      .order('hora_inicio', { ascending: true })                      // Ordenadas cronológicamente
-
+    const hoy = `${fechaLocal.getFullYear()}-${String(fechaLocal.getMonth() + 1).padStart(2, '0')}-${String(fechaLocal.getDate()).padStart(2, '0')}` 
+    const { data, error } = await supabase.from('citas').select('id, nombre_paciente, servicio, estado, fecha').eq('fecha', hoy)
     if (error) throw error
-    
-    // 3. Guardamos el resultado en la variable reactiva que usa el v-for de la plantilla
     proximasCitas.value = data || []
   } catch (error) {
     console.error('Error al cargar próximas citas:', error.message)
   }
 }
 
-// Carga los nombres de los pacientes abajo del botón derecho
+const obtenerSucursales = async () => {
+  try {
+    const { data, error } = await supabase.from('sucursales').select('*')
+    if (error) throw error
+    listaSucursales.value = data || []
+  } catch (err) {
+    console.error("Error al cargar sucursales en Home:", err.message)
+  }
+}
+
 const cargarPacientes = async () => {
   try {
     if (mostrarPacientes.value) {
       mostrarPacientes.value = false
       return
     }
-
-    const { data, error } = await supabase
-      .from('pacientes')
-      .select('id, nombre')
-      .order('nombre', { ascending: true })
-
+    const { data, error } = await supabase.from('pacientes').select('id, nombre').order('nombre', { ascending: true })
     if (error) throw error
     listaPacientes.value = data || []
     mostrarPacientes.value = true
@@ -64,9 +78,120 @@ const cargarPacientes = async () => {
   }
 }
 
+const cargarCitasSemana = async () => {
+  try {
+    const hoy = new Date()
+    const numeroDia = hoy.getDay() === 0 ? 7 : hoy.getDay()
+    const lunes = new Date(hoy)
+    lunes.setDate(hoy.getDate() - (numeroDia - 1))
+    const domingo = new Date(lunes)
+    domingo.setDate(lunes.getDate() + 6)
+    const formatoFecha = (d) => d.toISOString().split('T')[0]
+
+    const { data, error } = await supabase.from('citas').select('fecha').gte('fecha', formatoFecha(lunes)).lte('fecha', formatoFecha(domingo))
+    if (error) throw error
+    citasSemana.value = data || []
+  } catch (error) {
+    console.error('Error al cargar gráfica semanal:', error.message)
+  }
+}
+
+const cargarCitasMensuales = async () => {
+  try {
+    const añoActual = new Date().getFullYear()
+    const inicioAño = `${añoActual}-01-01`
+    const finAño = `${añoActual}-12-31`
+    let query = supabase.from('citas').select('fecha, id_sucursal').gte('fecha', inicioAño).lte('fecha', finAño)
+
+    if (sucursalGraficoMensual.value) {
+      query = query.eq('id_sucursal', sucursalGraficoMensual.value)
+    }
+
+    const { data, error } = await query
+    if (error) throw error
+
+    const conteo = new Array(12).fill(0)
+    if (data) {
+      data.forEach(cita => {
+        const fecha = new Date(cita.fecha + 'T00:00:00')
+        conteo[fecha.getMonth()]++
+      })
+    }
+    datosMensuales.value = conteo
+    // Guardamos el total de citas filtradas para obtener la base del porcentaje
+    totalCitasAño.value = data ? data.length : 0
+  } catch (error) {
+    console.error('Error al cargar citas mensuales:', error.message)
+  }
+}
+
+watch(sucursalGraficoMensual, () => {
+  cargarCitasMensuales()
+})
+
+const mesSiguiente = () => {
+  if (mesInicioVista.value + mesesVisiblesCount < 12) mesInicioVista.value++
+}
+const mesAnterior = () => {
+  if (mesInicioVista.value > 0) mesInicioVista.value--
+}
+
+const datosGraficoSemanal = computed(() => {
+  const diasNombre = ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom']
+  const conteoDias = [0, 0, 0, 0, 0, 0, 0]
+  const hoy = new Date()
+  const numeroDia = hoy.getDay() === 0 ? 7 : hoy.getDay()
+  const lunes = new Date(hoy)
+  lunes.setDate(hoy.getDate() - (numeroDia - 1))
+
+  citasSemana.value.forEach(cita => {
+    const fechaCita = new Date(cita.fecha + 'T00:00:00')
+    const diferenciaTiempo = fechaCita.getTime() - lunes.getTime()
+    const indiceDia = Math.floor(diferenciaTiempo / (1000 * 60 * 60 * 24))
+    if (indiceDia >= 0 && indiceDia < 7) conteoDias[indiceDia]++
+  })
+
+  const totalCitasSemana = citasSemana.value.length
+  return diasNombre.map((nombre, i) => {
+    const cantidad = conteoDias[i]
+    const porcentaje = totalCitasSemana > 0 ? Math.round((cantidad / totalCitasSemana) * 100) : 0
+    return { nombre, cantidad, porcentaje, altura: porcentaje > 0 ? `${porcentaje}%` : '5%' }
+  })
+})
+
+// REFACTORIZADO: Ahora calcula el porcentaje real sobre el total del año
+const graficoPaginado = computed(() => {
+  const fin = mesInicioVista.value + mesesVisiblesCount
+  const segmentoMeses = nombresMeses.slice(mesInicioVista.value, fin)
+  const segmentoCantidades = datosMensuales.value.slice(mesInicioVista.value, fin)
+
+  return segmentoMeses.map((nombre, i) => {
+    const cantidad = segmentoCantidades[i]
+    const indiceGlobalMes = mesInicioVista.value + i 
+    
+    // Regla de tres simple sobre el total de citas del año
+    const porcentaje = totalCitasAño.value > 0 ? Math.round((cantidad / totalCitasAño.value) * 100) : 0
+
+    return {
+      nombre,
+      cantidad,
+      porcentaje,
+      color: coloresPastelesMeses[indiceGlobalMes],
+      // La altura de la barra se rige estrictamente por su peso en porcentaje
+      altura: porcentaje > 0 ? `${porcentaje}%` : '5%'
+    }
+  })
+})
+
 onMounted(() => {
   cargarProximasCitas()
+  obtenerSucursales()
+  cargarCitasSemana()
+  cargarCitasMensuales()
 })
+
+
+
 </script>
 
 <template>
@@ -106,13 +231,6 @@ onMounted(() => {
     <main class="dashboard-main-card">
       <div class="dashboard-header">
         <h2 class="dashboard-title">Dashboard de Inicio</h2>
-        <button class="options-btn">
-          <svg viewBox="0 0 24 24" fill="currentColor" class="dots-icon">
-            <circle cx="12" cy="12" r="2"/>
-            <circle cx="5" cy="12" r="2"/>
-            <circle cx="19" cy="12" r="2"/>
-          </svg>
-        </button>
       </div>
 
       <div class="dashboard-grid">
@@ -166,24 +284,46 @@ onMounted(() => {
 
         <!-- Columna Derecha -->
         <section class="summary-panel">
-          <div class="summary-inner-card">
-            <h3 class="panel-heading-sm">Resumen de Hoy</h3>
-            <div class="tags-container">
-              <span class="summary-tag text-teal"><span class="bold-num">31</span> Pacientes</span>
-              <span class="summary-tag text-blue"><span class="bold-num">1</span> Pacientes</span>
-            </div>
+         <div class="main-chart-card" style="background: white; border-radius: 12px; padding: 20px; box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.05); width: 100%; margin-top: 20px; box-sizing: border-box;">
+  
+  <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
+    <h2 style="font-size: 18px; font-weight: 700; color: #1e293b; margin: 0;">Citas por meses</h2>
+    
+    <select 
+      v-model="sucursalGraficoMensual" 
+      style="padding: 6px 12px; font-size: 13px; border-radius: 6px; border: 1px solid #cbd5e1; background: #f8fafc; font-weight: 500; cursor: pointer;"
+    >
+      <option :value="null">Todas las Sucursales</option>
+      <option v-for="sucursal in listaSucursales" :key="sucursal.id" :value="sucursal.id">
+        {{ sucursal.nombre }}
+      </option>
+    </select>
+  </div>
 
-            <div class="chart-mockup">
-              <div class="chart-bars">
-                <div class="bar bar-1" style="height: 60%;"></div>
-                <div class="bar bar-2" style="height: 25%;"></div>
-                <div class="bar bar-3" style="height: 80%;"></div>
-                <div class="bar bar-4" style="height: 8%;"></div>
-              </div>
-              <div class="chart-axis-line"></div>
-            </div>
-          </div>
+  <div style="display: flex; align-items: center; gap: 10px; width: 100%;">
+    <button @click="mesAnterior" :disabled="mesInicioVista === 0" style="border: none; background: #f1f5f9; color: #475569; width: 32px; height: 32px; border-radius: 50%; font-weight: bold; cursor: pointer;">❮</button>
 
+    <div style="flex-grow: 1; height: 200px; display: flex; flex-direction: column; justify-content: flex-end; position: relative;">
+      <div style="display: flex; justify-content: space-around; align-items: flex-end; height: 100%; padding: 0 10px; z-index: 2;">
+        
+        <div v-for="(mes, index) in graficoPaginado" :key="index" style="display: flex; flex-direction: column; align-items: center; width: 14%; height: 100%; justify-content: flex-end;">
+          <span style="font-size: 12px; font-weight: 700; color: #1e293b; margin-bottom: 6px;">{{ mes.cantidad }}</span>
+          
+          <div 
+            :style="{ height: mes.altura, backgroundColor: mes.color }" 
+            style="width: 100%; border-radius: 4px 4px 0 0; transition: height 0.3s ease-out, background-color 0.2s;"
+          ></div>
+          
+          <span style="font-size: 11px; color: #64748b; margin-top: 8px; font-weight: 500;">{{ mes.nombre }}</span>
+        </div>
+
+      </div>
+      <div style="height: 2px; background-color: #e2e8f0; width: 100%; margin-top: 2px;"></div>
+    </div>
+
+    <button @click="mesSiguiente" :disabled="mesInicioVista + mesesVisiblesCount >= 12" style="border: none; background: #f1f5f9; color: #475569; width: 32px; height: 32px; border-radius: 50%; font-weight: bold; cursor: pointer;">❯</button>
+  </div>
+</div>
           <!-- Botón de Navegación "Mis Pacientes" -->
           <div class="shortcut-container-box">
             <button class="nav-shortcut-btn" @click="cargarPacientes">
