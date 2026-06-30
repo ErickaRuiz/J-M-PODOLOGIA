@@ -1030,7 +1030,7 @@ const formatearHora = (hora) => {
   <span class="celular-container">
     {{ citaSeleccionadaDetalle.celular || 'No registrado' }}
     <a v-if="citaSeleccionadaDetalle.celular && citaSeleccionadaDetalle.celular !== 'No registrado' && citaSeleccionadaDetalle.celular !== 'Cargando...'" 
-       :href="`https://api.whatsapp.com/send?phone=51${citaSeleccionadaDetalle.celular}&text=Hola%20${encodeURIComponent(citaSeleccionadaDetalle.nombre_paciente || 'Paciente')},%20le%20escribimos%20de%20la%20cl%C3%ADnica%20J%20%26%20M%20Podolog%C3%ADa%20y%20Reflexologia%20para%20confirmar%20su%20cita%20el%20d%C3%ADa%20${encodeURIComponent(fechaFormateada)}%20a%20las%20${encodeURIComponent(citaSeleccionadaDetalle.hora ? citaSeleccionadaDetalle.hora.substring(0, 5) : '')}%20${citaSeleccionadaDetalle.hora && parseInt(citaSeleccionadaDetalle.hora.substring(0, 2)) >= 12 ? 'PM' : 'AM'}.`" 
+       :href="`https://api.whatsapp.com/send?phone=51${citaSeleccionadaDetalle.celular}&text=Hola%20${encodeURIComponent(citaSeleccionadaDetalle.nombre_paciente || 'Paciente')},%20le%20escribimos%20de%20J%20%26%20M%20Podolog%C3%ADa%20y%20Reflexologia%20para%20confirmar%20su%20cita%20el%20d%C3%ADa%20${encodeURIComponent(fechaFormateada)}%20a%20las%20${encodeURIComponent(citaSeleccionadaDetalle.hora ? citaSeleccionadaDetalle.hora.substring(0, 5) : '')}%20${citaSeleccionadaDetalle.hora && parseInt(citaSeleccionadaDetalle.hora.substring(0, 2)) >= 12 ? 'PM' : 'AM'}.`" 
        target="_blank" 
        class="link-whatsapp-inline"
        style="color: #25d366; font-weight: bold; margin-left: 5px; text-decoration: none;">
